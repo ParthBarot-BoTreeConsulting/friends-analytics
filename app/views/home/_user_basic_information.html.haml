@@ -1,0 +1,76 @@
+%table
+  %tr
+    %td
+      = image_tag(@user_profile_image)
+    %td
+      %b
+        username
+      %br
+      = @user_basic_details["username"]
+  %tr
+    %td
+      %strong
+        Email
+    %td
+      = @user_basic_details["email"]
+  %tr
+    %td
+      %strong
+        Gender
+    %td
+      = @user_basic_details["gender"].capitalize unless @user_basic_details["gender"].nil?
+
+  %tr
+    %td
+      %strong
+        Birthday
+    %td
+      = (@user_basic_details["birthday"].present?)? @user_basic_details["birthday"] : "Not Added on facebook profile"
+  %tr
+    %td
+      %strong
+        Hometown
+    %td
+      = @user_basic_details["hometown"]["name"] unless @user_basic_details["hometown"].nil?
+  %tr
+    %td
+      %strong
+        Current Location
+    %td
+      = @user_basic_details["location"]["name"] unless @user_basic_details["location"].nil?
+  %tr
+    %td
+      %strong
+        Education
+    %td
+      - if !@user_basic_details["education"].nil? && !@user_basic_details["education"].blank?
+        - if @user_basic_details["education"].size > 0
+          %table
+            %tr
+              %th
+                Type
+              %th
+              %th
+                Name
+            - @user_basic_details["education"].each do |education|
+              %tr
+                %td
+                  = education["type"]
+                %td{:width => '20px;'}
+                %td
+                  - degree = "#{(education["degree"].present?)? "(#{education["degree"]["name"]})" : ""}"
+                  = education["school"]["name"]
+                  %strong
+                    = degree
+  %tr
+    %td
+      %strong
+        Languages
+      %td
+        - if @user_basic_details["languages"].present?
+          - if  @user_basic_details["languages"].size > 0
+            - @user_basic_details["languages"].each_with_index do |language,index|
+              %strong
+                = "#{index+1} :"
+              = language["name"]
+              %br
