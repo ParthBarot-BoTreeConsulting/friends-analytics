@@ -1,195 +1,191 @@
-%br
-= flash[:notice]
-%br
-- if user_signed_in?
-  = link_to "Logout",destroy_user_session_path
-- else
-  To Test facebook analysis you need to connect with facebook.
+.container
   %br
-  = link_to "facebook connect",user_omniauth_authorize_path(:facebook)
-
-- if user_signed_in?
-  %table{:style => "width:300px;margin-left:44%"}
-    %tr
-      %th
-        Your Basic Infrmation
-  = render :partial => "user_basic_information"
-  %table
-    %tr
-      %td{:valign => "top"}
-        %b
-          Posted Links
-      %td
-        - if @user_links["links"].present?
-          - if @user_links["links"]["data"].present?
-            = @user_links["links"]["data"].size
+  = flash[:notice]
+  %br
+  .navbar.navbar-inverse.navbar-fixed-top
+    .navbar-inner
+      .container
+        - if user_signed_in?
+          = link_to "Logout",destroy_user_session_path, class:'brand'
+        - else
+          To Test facebook analysis you need to connect with facebook.
+          %br
+          = link_to "facebook connect",user_omniauth_authorize_path(:facebook),class:'brand'
+  - if user_signed_in?
+    %table.table.table-striped
+      %tbody
+        %tr
+          %th
+            Your Basic Information
+    = render :partial => "user_basic_information"
+    %table.table.table-striped
+      %tr
+        %td{:valign => "top"}
+          %b
+            Posted Links
+        %td
+          - if @user_links["links"].present?
+            - if @user_links["links"]["data"].present?
+              = @user_links["links"]["data"].size
+            - else
+              %tr
+                %td{:rowspan=>2}
+                  No data available
+      %tr
+        %td{:valign => "top"}
+          %b
+            My Recent Status
+        %td
+          - if @user_statuses["statuses"].present?
+            - if @user_statuses["statuses"]["data"].present?
+              - @total_comments = 0
+              - @total_likes = 0
+              - @user_statuses["statuses"]["data"].each do |status|
+                - unless status["likes"].nil?
+                  - @total_likes = @total_likes + status["likes"]["data"].size
+                - unless status["comments"].nil?
+                  - @total_comments = @total_comments + status["comments"]["data"].size
+              %strong
+                Most 25 Recent Status:
+              -#= @user_statuses["statuses"]["data"].size
+              %br
+              %strong
+                Total Comments on most 25 recent status:
+              = @total_comments
+              %br
+              %strong
+                Total Likes on most 25 recent status:
+              = @total_likes
           - else
             %tr
               %td{:rowspan=>2}
                 No data available
-    %tr
-      %td{:valign => "top"}
-        %b
-          My Recent Status
-      %td
-        - if @user_statuses["statuses"].present?
-          - if @user_statuses["statuses"]["data"].present?
-            - @total_comments = 0
-            - @total_likes = 0
-            - @user_statuses["statuses"]["data"].each do |status|
-              - unless status["likes"].nil?
-                - @total_likes = @total_likes + status["likes"]["data"].size
-              - unless status["comments"].nil?
-                - @total_comments = @total_comments + status["comments"]["data"].size
-            %strong
-              Most 25 Recent Status:
-            -#= @user_statuses["statuses"]["data"].size
-            %br
-            %strong
-              Total Comments on most 25 recent status:
-            = @total_comments
-            %br
-            %strong
-              Total Likes on most 25 recent status:
-            = @total_likes
-        - else
-          %tr
-            %td{:rowspan=>2}
-              No data available
-
-
-
-
-    %tr
-      %th{:colspan=>2}
-        Your Friends Analytics
-    %tr
-      %td
-        %strong
-          Gender
-      %td
-        %table
-          %tr
-            %td
-              %b
-                Male :
-            %td
-              = @male_count
-          %tr
-            %td
-              %b
-                Female :
-            %td
-              = @female_count
-    %tr
-      %td{:valign => "top"}
-        %strong
-          Total Friends
-      %td
-        = @friends_profile.size
-
-    %tr
-      %td{:valign => "top"}
-        %strong
-          Friends Relationship Status
-      %td
-        %table
-          %tr
-            %td
-              Married
-            %td
-              = @married_count
-          %tr
-            %td
-              Single
-            %td
-              = @single_count
-          %tr
-            %td
-              In a relationship
-            %td
-              = @relationship_count
-          %tr
-            %td
-              It's complicated
-            %td
-              = @its_complicated_count
-          %tr
-            %td
-              Engaged
-            %td
-              = @engaged_count
-          %tr
-            %td
-              In an open relationship
-            %td
-              = @open_relatonship_count
-
-          %tr
-            %td
-              Not Defiend
-            %td
-              = @other_count
-    %tr
-      %td{:valign => "top"}
-        %b
-          Friends Birthday
-      %td
-        - if @friends_profile.size > 0
+      %tr
+        %th{:colspan=>2}
+          Your Friends Analytics
+      %tr
+        %td
+          %strong
+            Gender
+        %td
           %table
             %tr
-              %th{:align=>"left"}
-                Name
-              %th{:align=>"center"}
-                Age
-              %th{:align=>"center"}
-                Date of Birth
-            - @friends_profile.each do |friend|
+              %td
+                %b
+                  Male :
+              %td
+                = @male_count
+            %tr
+              %td
+                %b
+                  Female :
+              %td
+                = @female_count
+      %tr
+        %td{:valign => "top"}
+          %strong
+            Total Friends
+        %td
+          = @friends_profile.size
+
+      %tr
+        %td{:valign => "top"}
+          %strong
+            Friends Relationship Status
+        %td
+          %table
+            %tr
+              %td
+                Married
+              %td
+                = @married_count
+            %tr
+              %td
+                Single
+              %td
+                = @single_count
+            %tr
+              %td
+                In a relationship
+              %td
+                = @relationship_count
+            %tr
+              %td
+                It's complicated
+              %td
+                = @its_complicated_count
+            %tr
+              %td
+                Engaged
+              %td
+                = @engaged_count
+            %tr
+              %td
+                In an open relationship
+              %td
+                = @open_relatonship_count
+
+            %tr
+              %td
+                Not Defiend
+              %td
+                = @other_count
+      %tr
+        %td{:valign => "top"}
+          %b
+            Friends Birthday
+        %td
+          - if @friends_profile.size > 0
+            %table.table.table-striped
               %tr
-              - unless friend["birthday"].nil?
-                - valid_birthdate = friend["birthday"].split('/')
-                - if valid_birthdate.size == 3
-                - friend_birthday = friend["birthday"].gsub('/', '-')
-                - birthday = friend_birthday.split('-')
-                - birthdate = birthday[1]+'-'+birthday[0]+'-'+birthday[2]
-                  - user_total_age =  Time.diff(Time.parse(birthdate), Time.now)
+                %th{:align=>"left"}
+                  Name
+                %th{:align=>"center"}
+                  Age
+                %th{:align=>"center"}
+                  Date of Birth
+              - @friends_profile.each do |friend|
+                %tr
+                - unless friend["birthday"].nil?
+                  - valid_birthdate = friend["birthday"].split('/')
+                  - if valid_birthdate.size == 3
+                  - friend_birthday = friend["birthday"].gsub('/', '-')
+                  - birthday = friend_birthday.split('-')
+                  - birthdate = birthday[1]+'-'+birthday[0]+'-'+birthday[2]
+                    - user_total_age =  Time.diff(Time.parse(birthdate), Time.now)
+                    %td
+                      = "#{friend["name"]} : "
+                    %td{:width => "200px;"}
+                      = "#{user_total_age[:year]} Years"
+                    %td
+                      = friend["birthday"]
+      %tr
+        %td{:valign => "top"}
+          %b
+            Friends Locations
+        %td
+          %table.table.table-striped
+            %tr
+              %th
+                Location name
+              %th
+                Friends with common location
+            %tr
+              %th
+                &nbsp;
+              %th
+                &nbsp;
+            - @friends_location.each do |location_hsh,location_hsh_val|
+              - if location_hsh_val["count"]>0
+                %tr
+                  %th
+                    = location_hsh_val["location_name"]
                   %td
-                    = "#{friend["name"]} : "
-                  %td{:width => "200px;"}
-                    = "#{user_total_age[:year]} Years"
-                  %td
-                    = friend["birthday"]
 
+                    - if location_hsh_val["picture_urls"].size > 0
+                      - location_hsh_val["picture_urls"].each do |picture_url|
+                        = image_tag(picture_url)
 
-
-
-    %tr
-      %td{:valign => "top"}
-        %b
-          Friends Locations
-      %td
-        %table
-          %tr
-            %th
-              Location name
-            %th
-              Friends with common location
-          %tr
-            %th
-              &nbsp;
-            %th
-              &nbsp;
-          - @friends_location.each do |location_hsh,location_hsh_val|
-            - if location_hsh_val["count"]>0
-              %tr
-                %th
-                  = location_hsh_val["location_name"]
-                %td
-
-                  - if location_hsh_val["picture_urls"].size > 0
-                    - location_hsh_val["picture_urls"].each do |picture_url|
-                      = image_tag(picture_url)
-
-                  %b
-                    = location_hsh_val["count"]
+                    %b
+                      = location_hsh_val["count"]
 
