@@ -2,5 +2,5 @@ development:
   adapter: postgresql
   encoding: unicode
   database: fb_analytics_dev
-  username: root
-  password: root
+  username: postgres
+  password: password
