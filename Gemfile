@@ -8,7 +8,11 @@ gem 'rails', '3.2.9'
 gem 'pg'
 
 gem "haml", ">= 3.1.5"
-gem "haml-rails", ">= 0.3.4", :group => :development
+
+group :development, :custom_development do
+  gem "haml-rails", ">= 0.3.4"
+end
+
 gem "bootstrap-sass", ">= 2.0.1"
 gem 'devise'
 
@@ -36,6 +40,9 @@ gem 'omniauth-twitter'
 gem 'twitter'
 gem 'libv8'
 
+group :custom_development do
+  gem 'mysql2', '~> 0.3.11'
+end
 
 # To use ActiveModel has_secure_password
 # gem 'bcrypt-ruby', '~> 3.0.0'
