@@ -209,10 +209,11 @@ Devise.setup do |config|
   user_scopes = "user_birthday,user_education_history,user_likes,user_location,user_relationships,user_status,user_religion_politics,user_photos,user_videos,user_activities,user_work_history"
   friends_scope = "publish_stream, offline_access,friends_birthday,email,friends_education_history,friends_location,friends_relationships,friends_status,friends_religion_politics"
   #For local
-  #config.omniauth :facebook, "232193500233565", "d7d043200598a9a81074d24ba0656398",{:scope => "#{user_scopes},#{friends_scope}", :client_options => {:ssl => {:ca_file => '/usr/lib/ssl/certs/ca-certificates.crt'}}}
+  config.omniauth :facebook, "232193500233565", "d7d043200598a9a81074d24ba0656398",{:scope => "#{user_scopes},#{friends_scope}", :client_options => {:ssl => {:ca_file => '/usr/lib/ssl/certs/ca-certificates.crt'}}}
+  config.omniauth :twitter, 'U5k4JVJXePYsw81veLHzVw', 'dDHOqizrjhHAEhP3SSaV7SxRYmlF1tBymdn1gUbpV7Y', :strategy_class => OmniAuth::Strategies::Twitter
 
   #For production
-  config.omniauth :facebook, '493556407355873', 'a3feb6c0f952b49c86c494ab275d2412',{:scope => "#{user_scopes},#{friends_scope}", :client_options => {:ssl => {:ca_file => '/usr/lib/ssl/certs/ca-certificates.crt'}}}
+  #config.omniauth :facebook, '493556407355873', 'a3feb6c0f952b49c86c494ab275d2412',{:scope => "#{user_scopes},#{friends_scope}", :client_options => {:ssl => {:ca_file => '/usr/lib/ssl/certs/ca-certificates.crt'}}}
 
   # ==> Warden configuration
   # If you want to use other strategies, that are not supported by Devise, or

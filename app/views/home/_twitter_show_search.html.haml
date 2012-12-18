@@ -1,0 +1,25 @@
+.container
+  .row
+    %br
+  .row
+    %br
+  .row
+    %br
+  .row
+    .span4
+    .span4{:align => "center"}
+      .input-prepend.input-append
+        %span.add-on @
+        %input#twitterHandle.span2{:type => "text"}
+          %button.btn{:type => "button", :id => "id_search_btn"} Search
+    .span4
+  %br
+  %br
+  .row
+    .span12
+      #search_results
+
+  .row
+    .span12{:align => "center"}
+      #loader{:style => "display: none"}
+        = image_tag('ajax-loader.gif')

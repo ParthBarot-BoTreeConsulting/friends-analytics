@@ -1,7 +1,16 @@
 class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
-  def facebook
+  def twitter
+    auth =  request.env["omniauth.auth"]
+    session[:tw_token] = auth.credentials.token
+    session[:tw_secret] = auth.credentials.secret
+    session[:screen_name] = auth.extra.raw_info.screen_name
+    session[:twUid] = auth.uid
+    session[:signed_in_with] = auth.provider
+    process_callback(true)
+  end
 
+  def facebook
     data = request.env["omniauth.auth"].extra.raw_info
     session[:access_token] = request.env["omniauth.auth"].credentials.token
     if data.email.nil?
@@ -9,53 +18,74 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
     else
       @email = data.email
     end
-    user = User.find_by_email(@email)
-    if user.present?
-      user
-      update_fb_authentication(user)
-    else # Create a user with a stub password.
-      user = create_new_user()
-      create_fb_authentication(data, user)
-    end
-
-    if user.persisted?
-      flash[:notice] = I18n.t "devise.omniauth_callbacks.success", :kind => "#{params[:action]}".capitalize
-      sign_in_and_redirect user, :event => :authentication
-    else
-      session["devise.#{params[:action]}_data"] = request.env["omniauth.auth"]
-      redirect_to new_user_registration_url
-    end
-
+    process_callback
+    add_screen_name
   end
 
-  def create_new_user
-    user = User.new
-    user.email = @email
-    user.encrypted_password = Devise.friendly_token[0, 20]
-    user.save(:validate => false)
-    user
-  end
-
-  def update_fb_authentication(user)
-    fb_authentication = FbAuthentication.find_by_user_id(user.id)
-    if fb_authentication.present?
-      fb_authentication.update_attribute('token', request.env["omniauth.auth"].credentials.token)
-    else
-      create_fb_authentication(request.env["omniauth.auth"],user)
-    end
-  end
+  #def create_new_user
+  #  user = User.new
+  #  user.email = @email
+  #  user.encrypted_password = Devise.friendly_token[0, 20]
+  #  user.save(:validate => false)
+  #  user
+  #end
 
   private
 
-  def create_fb_authentication(data, user)
-    auth = FbAuthentication.find_by_uid_and_user_id(data.uid, @email)
-    if auth.nil?
-      fb_authentication = FbAuthentication.new
-      fb_authentication.uid = request.env["omniauth.auth"].uid
-      fb_authentication.token = request.env["omniauth.auth"].credentials.token
-      fb_authentication.user_id = user.id
-      fb_authentication.save
+  def process_callback(is_twitter=false)
+    if user_signed_in?
+      add_authentication
+      redirect_to root_url
+    else
+      process_create_user(is_twitter)
     end
+  end
+
+  # Add authentication to current user
+  def add_authentication
+    auth = request.env["omniauth.auth"]
+    authentication = current_user.authentications.find_by_provider(auth.provider)
+    if authentication.blank?
+      current_user.register_omniauth(auth)
+      current_user.save(:validate => false)
+      flash[:notice] = "Connected to #{auth["provider"]} successfully."
+    else
+      authentication.update_attribute('token', auth.credentials.token)
+    end
+
+  end
+
+  def process_create_user(is_twitter = false)
+    auth = request.env["omniauth.auth"]
+    authentication = Authentication.find_by_provider_and_uid(auth['provider'], auth['uid'])
+    if authentication.present?
+      #flash[:notice] = "Signed in successfully."
+      sign_in(:user, authentication.user)
+      redirect_to root_url
+    else
+      user = User.new
+      user.apply_omniauth(auth)
+
+      if user.save(:validate => false)
+        flash[:notice] = "Account created and you have been signed in!"
+        sign_in_and_redirect(:user, user)
+      else
+        flash[:error] = "Error while logging in! #{user.errors.full_messages.join(" and ")}"
+        redirect_to root_url
+      end
+
+    end
+  end
+
+# Added by:: Parth
+#
+# add screen name of current user on Authentication model with corresponding provider
+#
+  def add_screen_name
+    auth = request.env["omniauth.auth"]
+    authentication = current_user.authentications.find_by_provider(auth.provider)
+    authentication.update_attribute('screen_name',auth.info.name)
+    session[:fb_screen_name] = auth.info.name
   end
 
 end

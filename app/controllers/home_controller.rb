@@ -1,9 +1,10 @@
 class HomeController < ApplicationController
   def index
     if user_signed_in?
-      if current_user.fb_authentication.present?
-        token = current_user.fb_authentication.token
-        uid =  current_user.fb_authentication.uid
+      fb_auth = current_user.authentications.find_by_provider(:facebook)
+      if fb_auth.present?
+        token = fb_auth.token
+        uid =  fb_auth.uid
         get_fb_graph_api_object(token)
         @user_basic_details = get_user_fb_profile(uid,"")
         @user_statuses = get_user_fb_profile(uid,"statuses")
@@ -109,5 +110,45 @@ class HomeController < ApplicationController
         @female_count = @female_count+1
       end
     end
+  end
+
+  ################################# Twitter section
+
+  def process_tweets
+
+    retweets = Array.new
+
+    @tweets_retweets_arr = Array.new
+    twitter_auth = current_user.authentications.find_by_provider(:twitter)
+
+    if twitter_auth
+      twitter = Twitter::Client.new(:oauth_token => twitter_auth.token,
+                                    :oauth_token_secret => twitter_auth.secret)
+
+      tweets = twitter.user_timeline(params[:twitter_handle], :page => 1, :count => 5)
+
+      tweets.each do |tweet|
+        tweet_embedded_urls = URI.extract(tweet.text)
+        retweet_ids = get_retweet_ids(twitter, tweet.id)
+        tweets_retweets = TweetsRetweets.new(tweet.id, tweet.text, tweet_embedded_urls, retweet_ids)
+        @tweets_retweets_arr << tweets_retweets
+      end
+
+      return @tweets_retweets_arr
+    end
+  end
+
+  def get_retweet_ids(twitter_client, id)
+    retweet_ids = Array.new
+    retweets = Array.new
+    begin
+      retweets = twitter_client.retweets(id)
+      retweets.each do |retweet|
+        retweet_ids << retweet.id
+      end
+    rescue Exception => e
+      puts "Error while fetching Retweets - #{e.message}"
+    end
+    retweet_ids
   end
 end

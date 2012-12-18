@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-gem 'rails', '3.2.8'
+gem 'rails', '3.2.9'
 
 # Bundle edge Rails instead:
 # gem 'rails', :git => 'git://github.com/rails/rails.git'
@@ -11,7 +11,7 @@ gem "haml", ">= 3.1.5"
 gem "haml-rails", ">= 0.3.4", :group => :development
 gem "bootstrap-sass", ">= 2.0.1"
 gem 'devise'
-gem 'omniauth-facebook'
+
 gem 'fb_graph'
 gem 'koala'
 gem 'therubyracer', :platform => :ruby
@@ -29,6 +29,13 @@ end
 
 gem 'time_diff'
 gem 'jquery-rails'
+
+gem 'omniauth'
+gem 'omniauth-facebook'
+gem 'omniauth-twitter'
+gem 'twitter'
+gem 'libv8'
+
 
 # To use ActiveModel has_secure_password
 # gem 'bcrypt-ruby', '~> 3.0.0'

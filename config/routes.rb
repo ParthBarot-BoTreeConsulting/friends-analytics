@@ -6,6 +6,8 @@ FacebookAnalytics::Application.routes.draw do
     match '/users/sign_in' => 'users/sessions#create'
   end
 
+  match "/home/process_tweets" => "home#process_tweets"
+
   # The priority is based upon order of creation:
   # first created -> highest priority.
 
