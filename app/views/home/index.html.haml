@@ -2,6 +2,16 @@
   .navbar-inner
     .container
       %h4 Social Analytics
+      - if user_signed_in?
+        = link_to "Logout",destroy_user_session_path, class:'brand'
+      - unless session[:fb_screen_name].present?
+        %a.btn.btn-primary.btn-mini{href:"#{user_omniauth_authorize_path(:facebook)}"}
+          %i.icon-white.icon-thumbs-up
+          Connect to Facebook
+      - unless session[:twUid].present?
+        %a.btn.btn-info.btn-mini{href:"#{user_omniauth_authorize_path(:twitter)}"}
+          %i.icon-white.icon-thumbs-up
+          Connect to Twitter
 - if user_signed_in? && session[:fb_screen_name].present?
   = render :partial => 'fb_analysis'
 - if user_signed_in? && session[:twUid].present?

@@ -2,10 +2,6 @@
   %br
   = flash[:notice]
   %br
-  .navbar.navbar-inverse.navbar-fixed-top
-    .navbar-inner
-      .container
-        = link_to "Logout",destroy_user_session_path, class:'brand'
   - if user_signed_in?
     %table.table.table-striped
       %tbody
