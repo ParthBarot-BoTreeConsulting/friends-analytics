@@ -1,116 +1,50 @@
+require 'utilities/facebook/fb_graph_util'
+require 'gchart'
+
 class HomeController < ApplicationController
+
+  include Utilities::Facebook
+
   def index
     if user_signed_in?
       fb_auth = current_user.authentications.find_by_provider(:facebook)
       if fb_auth.present?
-        token = fb_auth.token
-        uid =  fb_auth.uid
-        get_fb_graph_api_object(token)
-        @user_basic_details = get_user_fb_profile(uid,"")
-        @user_statuses = get_user_fb_profile(uid,"statuses")
-        @user_links = get_user_fb_profile(uid,"links")
-        @user_albums = get_user_fb_profile(uid,"albums")
-        #render :text => @user_albums["albums"]["data"].size.inspect and return false
-        @user_profile_image = @graph.get_picture(uid,:type=>"large")
-        get_fb_friends_profile(uid)
-        initialize_objects_for_relationship_status_and_gender()
-        @friends_location = {}
-        @friends_profile.each do |friend|
-          calculate_total_male_female_friends(friend)
-          calculate_friends_relationship_status(friend)
-          analyse_friends_location(friend)
+        fb_util = Utilities::Facebook::FbGraphUtil.new(fb_auth.token)
+        @friends_stats_map = fb_util.generate_friends_stats_map(fb_auth.uid)
+        @activity_stats_map = fb_util.get_user_activity_map(fb_auth.uid)
+
+        fb_analytics_json_map = {
+            friends_stats_map: @friends_stats_map,
+            activity_stats_map: @activity_stats_map
+        }
+        @total_users =  @friends_stats_map[:gender_map].values.inject{|s,n| s+n}
+
+        @activity_graph_url = get_activity_pie_chart(@activity_stats_map) if(@activity_stats_map.present? && @activity_stats_map.size>=3)
+
+        @top_countries_graph_url = get_google_pie_chart_url(@friends_stats_map[:country_map].collect{|key,val| "#{key} (#{val})"},
+                                                            @friends_stats_map[:country_map].values,
+                                                            '1277bd', 'F8F8F8', '350x300', "Top Countries")
+
+        @top_states_graph_url = get_google_pie_chart_url(@friends_stats_map[:state_map].collect{|key,val| "#{key} (#{val})"},
+                                                            @friends_stats_map[:state_map].values,
+                                                            '1277bd', 'F8F8F8', '350x300', "Top States")
+
+
+        if @friends_stats_map.present? && @friends_stats_map.size>0
+          @friends_gender_graph_url = get_google_pie_chart_url(@friends_stats_map[:gender_map].collect{|key,val| "#{key} (#{val})"},
+                                                               @friends_stats_map[:gender_map].values,
+                                                               '1277bd', 'F8F8F8', '250x200', "Friends' Genders")
+          @friends_status_graph_url = get_google_pie_chart_url(@friends_stats_map[:relationship_status_map].collect{|key,val| "#{key} (#{val})"},
+                                                               @friends_stats_map[:relationship_status_map].values,
+                                                               '1277bd', 'F8F8F8','250x200',"Friends' Relationships")
+          @friends_age_graph_url = get_google_pie_chart_url(@friends_stats_map[:age_map].collect{|key,val| "#{key} (#{val})"},
+                                                            @friends_stats_map[:age_map].values,
+                                                            '1277bd', 'F8F8F8','250x200',"Friends' Ages")
         end
-
       end
     end
   end
 
-
-  def get_fb_graph_api_object(token)
-    begin
-      @graph = Koala::Facebook::API.new("#{token}")
-    rescue Exception => e
-      Rails.logger.info("=======================================> Error while initialise graph object: #{e.message} ")
-    end
-  end
-
-  def get_user_fb_profile(uid,fields)
-    begin
-      @user_details = @graph.get_object("#{uid}","fields" => "#{fields}")
-    rescue Exception => e
-      Rails.logger.info("=============================>Error while fetching My facebook profile : #{e.message}")
-    end
-  end
-
-
-  def get_fb_friends_profile(uid)
-    begin
-      @friends_profile = @graph.get_connections("#{uid}", "friends", "fields" => "name,birthday,gender,link,relationship_status,location,picture")
-    rescue Exception => e
-      Rails.logger.info("======================================> Error while getting friends profile: #{e.message}")
-    end
-  end
-
-  def analyse_friends_location(friend)
-    unless friend["location"].nil?
-      if @friends_location.has_key?(friend["location"]["id"])
-        @friends_location[friend["location"]["id"]]["count"] = @friends_location[friend["location"]["id"]]["count"] + 1
-        @friends_location[friend["location"]["id"]]["location_name"] = friend["location"]["name"]
-        @friends_location[friend["location"]["id"]]["picture_urls"] << friend["picture"]["data"]["url"]
-      else
-        @friends_location[friend["location"]["id"]] = {}
-        @friends_location[friend["location"]["id"]]["picture_urls"] = []
-        @friends_location[friend["location"]["id"]]["count"] = 1
-        @friends_location[friend["location"]["id"]]["location_name"] = friend["location"]["name"]
-        @friends_location[friend["location"]["id"]]["picture_urls"] << friend["picture"]["data"]["url"]
-      end
-    end
-  end
-
-  def calculate_friends_relationship_status(friend)
-    unless friend["relationship_status"].nil?
-      case friend["relationship_status"]
-        when "Married"
-          @married_count = @married_count + 1
-        when "Single"
-          @single_count = @single_count + 1
-        when "It's complicated"
-          @its_complicated_count = @its_complicated_count + 1
-        when "In a relationship"
-          @relationship_count = @relationship_count + 1
-        when "In an open relationship"
-          @open_relatonship_count = @open_relatonship_count + 1
-        when "Engaged"
-          @engaged_count = @engaged_count + 1
-      end
-    else
-      @other_count = @other_count + 1
-    end
-  end
-
-  def initialize_objects_for_relationship_status_and_gender
-    @male_count = 0
-    @female_count = 0
-    @married_count = 0
-    @single_count = 0
-    @its_complicated_count = 0
-    @other_count = 0
-    @open_relatonship_count = 0
-    @engaged_count = 0
-    @relationship_count = 0
-  end
-
-  def calculate_total_male_female_friends(friend)
-    unless friend["gender"].nil?
-      if friend["gender"] == "male"
-        @male_count = @male_count+1
-
-      end
-      if friend["gender"] == "female"
-        @female_count = @female_count+1
-      end
-    end
-  end
 
   ################################# Twitter section
 
@@ -150,5 +84,21 @@ class HomeController < ApplicationController
       puts "Error while fetching Retweets - #{e.message}"
     end
     retweet_ids
+  end
+
+  private
+
+  def get_activity_pie_chart(activity_stats_map)
+    legend = ['Photos', 'Statuses', 'links']
+    data = [activity_stats_map[:total_photos], activity_stats_map[:total_statuses],activity_stats_map[:total_links]]
+    get_google_pie_chart_url(legend, data, '1277bd', 'F8F8F8')
+  end
+
+  def get_google_pie_chart_url(legend, data,colors='a4a5de',bg_color='F8F8F8',size='200x120', title='')
+    Gchart.pie(title: title, legend: legend.collect{|ele| ele.humanize()}, data: data, size: size, bar_colors: colors, bg_color: bg_color)
+  end
+
+  def get_google_bar_chart_url(legend, data,colors='a4a5de',bg_color='FFFFFF',size='200x120', title='')
+    Gchart.bar(title: title, legend: legend.collect{|ele| ele.humanize()}, data: data, size: size, bar_colors: colors, bg_color: bg_color, bar_width_and_spacing: '25,6')
   end
 end
