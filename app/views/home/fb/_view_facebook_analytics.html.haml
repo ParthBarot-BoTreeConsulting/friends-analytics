@@ -1,4 +1,4 @@
-.container
+.container-fluid
   - if @activity_stats_map.present? || @friends_stats_map.present?
     - if @activity_stats_map.present?
       %br
@@ -19,7 +19,8 @@
                 %td{width: '20%'}
                   %label Count
                 %td{rowspan: 4, style:'vertical-align: middle;'}
-                  = image_tag  @activity_graph_url
+                  #chart1
+                  = render_chart @activity_graph, 'chart1'
               %tr
                 %td
                   %label Uploaded photos
@@ -61,10 +62,12 @@
       %table.table.table-striped
         %tr
           %td
-            = image_tag @top_countries_graph_url
+            #chart2
+            = render_chart @top_countries_graph, 'chart2'
           %td
           %td
-            = image_tag @top_states_graph_url
+            #chart3
+            = render_chart @top_states_graph, 'chart3'
       .cl
     - else
       %table.table.table-striped
@@ -74,11 +77,14 @@
       %table.table.table-striped
         %tr
           %td
-            = image_tag @friends_gender_graph_url
+            #chart4
+            = render_chart @friends_gender_graph, 'chart4'
           %td
-            = image_tag @friends_status_graph_url
+            #chart5
+            = render_chart @friends_status_graph, 'chart5'
           %td
-            = image_tag @friends_age_graph_url
+            #chart6
+            = render_chart @friends_age_graph, 'chart6'
     - else
       %table.table.table-striped
         %tr

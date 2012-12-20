@@ -19,6 +19,7 @@ gem 'devise'
 gem 'fb_graph'
 gem 'koala'
 gem 'googlecharts'
+gem "google_visualr", ">= 2.1"
 gem 'therubyracer', :platform => :ruby
 # Gems used only for assets and not required
 # in production environments by default.

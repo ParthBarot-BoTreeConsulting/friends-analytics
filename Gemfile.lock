@@ -57,6 +57,7 @@ GEM
       multi_json
       rack-oauth2 (>= 0.14.4)
       tzinfo
+    google_visualr (2.1.2)
     googlecharts (1.6.8)
     haml (3.1.7)
     haml-rails (0.3.5)
@@ -186,6 +187,7 @@ DEPENDENCIES
   coffee-rails (~> 3.2.1)
   devise
   fb_graph
+  google_visualr (>= 2.1)
   googlecharts
   haml (>= 3.1.5)
   haml-rails (>= 0.3.4)
