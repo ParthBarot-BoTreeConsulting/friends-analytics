@@ -103,12 +103,12 @@ module Utilities
               fields:"id, message", limit: '200',  until: until_date
           })
           page = 0
-          while user_statuses.present?
+          if user_statuses.present?
             page +=1
-            info  "Fetching data for page: #{page} ..."
+            #info  "Fetching data for page: #{page} ..."
 
             total_statuses+= user_statuses.size
-            user_statuses = user_statuses.next_page
+            #user_statuses = user_statuses.next_page
           end
 
           #Fetching posts, comments and likes...
@@ -118,9 +118,9 @@ module Utilities
               limit: '200',  until: until_date
           })
           page = 0
-          while user_posts.present?
+          if user_posts.present?
             page +=1
-            info  "Fetching data for page: #{page} ..."
+            #info  "Fetching data for page: #{page} ..."
 
             posts = user_posts.select{|status| status['message'].present?}.size
             total_posts+= posts
@@ -129,7 +129,7 @@ module Utilities
             total_comments += get_status_action_count(user_posts, 'comments')
             total_char_count += get_status_message_char_count(user_posts)
 
-            user_posts = user_posts.next_page
+            #user_posts = user_posts.next_page
           end
           debug "EXIT :: ==> fetch_status_activity_details(uid,since_date,until_date)"
         rescue Exception => e
