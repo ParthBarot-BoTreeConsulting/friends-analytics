@@ -8,7 +8,7 @@ class HomeController < ApplicationController
   def index
     if user_signed_in?
       fb_auth = current_user.authentications.find_by_provider(:facebook)
-      if fb_auth.present?
+      if fb_auth.present? && session[:fb_screen_name].present?
         fb_util = Utilities::Facebook::FbGraphUtil.new(fb_auth.token)
         @friends_stats_map = fb_util.generate_friends_stats_map(fb_auth.uid)
         @activity_stats_map = fb_util.get_user_activity_map(fb_auth.uid)
@@ -46,8 +46,7 @@ class HomeController < ApplicationController
     twitter_auth = current_user.authentications.find_by_provider(:twitter)
 
     if twitter_auth
-      twitter = Twitter::Client.new(:oauth_token => twitter_auth.token,
-                                    :oauth_token_secret => twitter_auth.secret)
+      #twitter = Twitter::Client.new(:oauth_token => twitter_auth.token,:oauth_token_secret => twitter_auth.secret)
 
       @tweets_analysis = TweetsAnalysis.new(params[:twitter_handle], twitter_auth.token, twitter_auth.secret)
       @tweets_analysis.analyze
@@ -143,6 +142,7 @@ class TweetsAnalysis
         :oauth_token => oauth_token,
         :oauth_token_secret => oauth_token_secret
     )
+    puts " ============== #{@twitter_client}"
   end
 
 

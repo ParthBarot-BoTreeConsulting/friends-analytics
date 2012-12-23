@@ -50,7 +50,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
       current_user.save(:validate => false)
       flash[:notice] = "Connected to #{auth["provider"]} successfully."
     else
-      authentication.update_attribute('token', auth.credentials.token)
+      authentication.update_attributes(token: auth.credentials.token,secret: auth.credentials.secret)
     end
 
   end

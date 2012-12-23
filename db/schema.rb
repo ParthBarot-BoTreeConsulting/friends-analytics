@@ -24,14 +24,6 @@ ActiveRecord::Schema.define(:version => 20121218183632) do
     t.datetime "updated_at",  :null => false
   end
 
-  create_table "fb_authentications", :force => true do |t|
-    t.integer  "user_id"
-    t.string   "uid"
-    t.string   "token"
-    t.datetime "created_at", :null => false
-    t.datetime "updated_at", :null => false
-  end
-
   create_table "users", :force => true do |t|
     t.string   "email",                  :default => "", :null => false
     t.string   "encrypted_password",     :default => "", :null => false
