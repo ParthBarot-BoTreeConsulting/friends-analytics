@@ -43,27 +43,36 @@ class HomeController < ApplicationController
   ################################# Twitter section
 
   def process_tweets
-
-    retweets = Array.new
-
-    @tweets_retweets_arr = Array.new
     twitter_auth = current_user.authentications.find_by_provider(:twitter)
 
     if twitter_auth
       twitter = Twitter::Client.new(:oauth_token => twitter_auth.token,
                                     :oauth_token_secret => twitter_auth.secret)
 
-      tweets = twitter.user_timeline(params[:twitter_handle], :page => 1, :count => 5)
-
-      tweets.each do |tweet|
-        tweet_embedded_urls = URI.extract(tweet.text)
-        retweet_ids = get_retweet_ids(twitter, tweet.id)
-        tweets_retweets = TweetsRetweets.new(tweet.id, tweet.text, tweet_embedded_urls, retweet_ids)
-        @tweets_retweets_arr << tweets_retweets
-      end
-
-      return @tweets_retweets_arr
+      @tweets_analysis = TweetsAnalysis.new(params[:twitter_handle], twitter_auth.token, twitter_auth.secret)
+      @tweets_analysis.analyze
+      puts @tweets_analysis.profile.inspect
     end
+    #retweets = Array.new
+    #
+    #@tweets_retweets_arr = Array.new
+    #twitter_auth = current_user.authentications.find_by_provider(:twitter)
+    #
+    #if twitter_auth
+    #  twitter = Twitter::Client.new(:oauth_token => twitter_auth.token,
+    #                                :oauth_token_secret => twitter_auth.secret)
+    #
+    #  tweets = twitter.user_timeline(params[:twitter_handle], :page => 1, :count => 5)
+    #
+    #  tweets.each do |tweet|
+    #    tweet_embedded_urls = URI.extract(tweet.text)
+    #    retweet_ids = get_retweet_ids(twitter, tweet.id)
+    #    tweets_retweets = TweetsRetweets.new(tweet.id, tweet.text, tweet_embedded_urls, retweet_ids)
+    #    @tweets_retweets_arr << tweets_retweets
+    #  end
+    #
+    #  return @tweets_retweets_arr
+    #end
   end
 
   def get_retweet_ids(twitter_client, id)
@@ -117,4 +126,160 @@ class HomeController < ApplicationController
 
   end
 
+end
+
+########################################################################################################################
+class TweetsAnalysis
+
+  include Twitter
+
+  TWEETS_PER_PAGE = 200
+  attr_accessor :profile, :statistics
+
+  def initialize(screen_name_or_user_id, oauth_token, oauth_token_secret)
+    @screen_name_or_user_id = screen_name_or_user_id
+
+    @twitter_client = Twitter::Client.new(
+        :oauth_token => oauth_token,
+        :oauth_token_secret => oauth_token_secret
+    )
+  end
+
+
+  def fetch_by_page(page_num)
+    puts("Processing Page No :: #{page_num}")
+    @twitter_client.user_timeline(@screen_name_or_user_id, :page => page_num, :count => TWEETS_PER_PAGE)
+  end
+
+  def analyze
+    puts("Analysis started.....")
+    tweets = fetch_by_page(1)
+
+    if tweets && tweets.any?
+      user = tweets.first.user
+      total_tweets = user.statuses_count
+      total_tweets = total_tweets > 3200 ? 3200 : total_tweets
+      total_pages = total_tweets % TWEETS_PER_PAGE == 0 ? total_tweets / TWEETS_PER_PAGE : total_tweets / TWEETS_PER_PAGE + 1
+
+      #Profile
+      @profile = Profile.new(user)
+
+      #Statistics
+      @statistics = Statistics.new(user)
+
+      @statistics.merge(tweets) #for first page
+
+      if total_pages > 1
+        (2..total_pages).each do |page_num|
+          @statistics.merge(fetch_by_page(page_num))
+        end
+      end
+    else
+      puts("User doesn't have any tweets to analyze")
+      #TODO : What if there is no tweet?
+    end
+    puts("Analysis finished.....")
+  end
+end
+
+class Profile
+  attr_accessor :profile_image_url, :screen_name, :name, :joined_on, :time_zone, :location, :bio, :website_url, :lang
+
+  def initialize(user)
+    @profile_image_url = user.profile_image_url
+    @screen_name = user.screen_name
+    @name = user.name
+    @joined_on = user.created_at.to_datetime
+    @location = user.location
+    @time_zone = user.time_zone
+    @lang = user.lang
+    @bio = user.description
+    @website_url = user.url
+  end
+
+  def to_s
+    "Name: #{name}, Screen Name: #{screen_name}, Joined On: #{joined_on}, Location: #{location}, Timezone: #{time_zone}, Language: #{lang}, Bio: #{bio}, URL: #{website_url}"
+  end
+end
+
+class Statistics
+  attr_accessor :tweets, :followers, :following, :listed, :tweets_analyzed,
+                :retweets_count, :tweets_with_links, :tweets_with_media,
+                :tweets_with_hashtag, :tweets_with_mentions
+
+  def initialize(user)
+    @tweets = user.statuses_count
+    @followers = user.followers_count
+    @following = user.friends_count
+    @listed = user.listed_count
+    @tweets_analyzed = @retweets_count = @tweets_with_links = @tweets_with_media = 0
+    @tweets_with_hashtag = @tweets_with_mentions = 0
+    @hashtags = []
+    @mentions = []
+  end
+
+  def merge(tweets)
+
+    self.tweets_analyzed = tweets_analyzed + tweets.size
+
+    tweets.each do |tweet|
+
+      if tweet.retweeted_status
+        self.retweets_count = retweets_count + 1
+      end
+
+      if tweet.urls.any?
+        self.tweets_with_links = tweets_with_links + 1
+      end
+
+      if tweet.media.any?
+        self.tweets_with_media = tweets_with_media + 1
+      end
+
+      if tweet.hashtags.any?
+        self.tweets_with_hashtag = tweets_with_hashtag + 1
+        tweet.hashtags.each do |tag|
+          @hashtags << tag.text
+        end
+      end
+
+      if tweet.user_mentions.any?
+        self.tweets_with_mentions = tweets_with_mentions + 1
+        tweet.user_mentions.each do |mention|
+          @mentions << mention.screen_name
+        end
+      end
+    end
+  end
+
+  def followers_ratio
+    (followers / following.to_f).round(2)
+  end
+
+  def hashtags
+    @hashtags.uniq
+  end
+
+  def mentions
+    @mentions.uniq
+  end
+
+  def hashtags_with_count
+    count_occurance(@hashtags)
+  end
+
+  def mentions_with_count
+    count_occurance(@mentions)
+  end
+
+  def to_s
+    "Statistics :: Tweets #: #{tweets}, Followers #: #{followers}, Following #: #{following}, Followers ratio: #{followers_ratio}, Listed #: #{listed} \
+    tweets_analyzed #: #{tweets_analyzed}, retweets_count #: #{retweets_count}, tweets_with_links #: #{tweets_with_links} \
+    tweets_with_media #: #{tweets_with_media}, tweets_with_hashtag #: #{tweets_with_hashtag}, tweets_with_mentions #: #{tweets_with_mentions}"
+  end
+
+  private
+  def count_occurance(tuples_array)
+    tuples_array.inject(Hash.new(0)) { |h, i| h[i] += 1; h }
+  end
 end

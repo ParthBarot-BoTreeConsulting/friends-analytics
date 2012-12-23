@@ -1,0 +1,84 @@
+.container
+  %section#overview
+    .row
+      .span4
+        %h2 Profile
+        %h6 &nbsp;
+        %table.condensed-table
+          %tbody
+            %tr
+              %td{:width => "34%"} Name
+              %td= @tweets_analysis.profile.name
+            %tr
+              %td Joined on
+              %td= @tweets_analysis.profile.joined_on
+            %tr
+              %td Location
+              %td= @tweets_analysis.profile.location
+            %tr
+              %td Timezone
+              %td= @tweets_analysis.profile.time_zone
+            %tr
+              %td Language
+              %td= @tweets_analysis.profile.lang
+            %tr
+              %td Bio
+              %td= @tweets_analysis.profile.bio
+            %tr
+              %td URL
+              %td
+                %a{:href => @tweets_analysis.profile.website_url}
+      .span4
+        %h2 Statistics
+        %h6 Overview
+        %table.condensed-table
+          %tbody
+            %tr
+              %td{:width => "34%"} Tweets
+              %td= @tweets_analysis.statistics.tweets
+            %tr
+              %td Followers
+              %td= @tweets_analysis.statistics.followers
+            %tr
+              %td Following
+              %td= @tweets_analysis.statistics.following
+            %tr
+              %td Followers ratio
+              %td= @tweets_analysis.statistics.followers_ratio
+            %tr
+              %td Listed
+              %td= @tweets_analysis.statistics.listed
+      .span4
+        %h2 &nbsp;
+        %h6 Detailed
+        %table.condensed-table
+          %tbody
+            %tr
+              %td{:width => "51%"} Replies
+              %td (WIP)
+            %tr
+              %td Tweets with @mentions
+              %td= @tweets_analysis.statistics.tweets_with_mentions
+            %tr
+              %td Tweets with #hashtags
+              %td= @tweets_analysis.statistics.tweets_with_hashtag
+            %tr
+              %td Retweets
+              %td= @tweets_analysis.statistics.retweets_count
+            %tr
+              %td Tweets with links
+              %td= @tweets_analysis.statistics. tweets_with_links
+            %tr
+              %td Tweets with media
+              %td= @tweets_analysis.statistics.tweets_with_media
+  %section#topics
+    .row
+      .span12
+        %h2 # Hashtags
+        %p
+          = @tweets_analysis.statistics.hashtags.uniq
+    .row
+      .span12
+        %h2 @ Mentions
+        %p
+          = @tweets_analysis.statistics.mentions.uniq
